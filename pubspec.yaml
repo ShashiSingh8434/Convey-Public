@@ -1,0 +1,92 @@
+name: convey
+description: "A new Flutter project."
+
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+# The following defines the version and build number for your application.
+# A version number is three numbers separated by dots, like 1.2.43
+# followed by an optional build number separated by a +.
+# Both the version and the builder number may be overridden in flutter
+# build by specifying --build-name and --build-number, respectively.
+# In Android, build-name is used as versionName while build-number used as versionCode.
+# Read more about Android versioning at https://developer.android.com/studio/publish/versioning
+# In iOS, build-name is used as CFBundleShortVersionString while build-number is used as CFBundleVersion.
+# Read more about iOS versioning at
+# https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
+# In Windows, build-name is used as the major, minor, and patch parts
+# of the product and file versions while build-number is used as the build suffix.
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.12.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  firebase_core: ^4.0.0
+  firebase_auth: ^6.0.0
+  cloud_firestore: ^6.0.0
+  firebase_database: ^12.0.0
+
+  google_sign_in: ^7.1.0
+  
+  # Notifications 
+  firebase_messaging: ^16.3.0 
+  flutter_local_notifications: ^18.0.0
+
+  flutter_webrtc: ^0.13.0
+
+  flutter_riverpod: ^3.0.0
+  go_router: ^16.0.0
+
+  http: ^1.2.0
+
+  # Image
+  image_picker: ^1.1.2
+  flutter_image_compress: ^2.3.0
+  cached_network_image: ^3.4.1
+
+  # Audio
+  record: ^6.1.1
+  just_audio: ^0.10.4
+  
+  # Photo Viewer
+  photo_view: ^0.15.0
+  
+  path_provider: ^2.1.5
+  
+  url_launcher: ^6.3.0
+
+  cupertino_icons: ^1.0.8
+  uuid: ^4.5.3
+
+  permission_handler: ^12.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/final_logo.png"
+
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/final_logo.png"
+
+flutter:
+  uses-material-design: true
+
+  assets:
+      - assets/google_img.png
+      - assets/app_logo.png
+      - assets/app_logo_1.png
+      - assets/app_logo_2.png
+      - assets/app_logo_3.png
+      - assets/zoomed.png
+      - assets/final_logo.png
+      - assets/final_zoomed_logo.png

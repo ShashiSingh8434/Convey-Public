@@ -1,0 +1,160 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // HELPER FUNCTIONS
+    // ─────────────────────────────────────────────────────────────────────────
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(uid) {
+      return request.auth.uid == uid;
+    }
+
+    function isValidUsername(username) {
+      return username.matches('^[a-z][a-z0-9_]{2,19}$');
+    }
+
+    function hasRequiredUserFields() {
+      let data = request.resource.data;
+      return data.keys().hasAll(['uid', 'email', 'profileCompleted', 'createdAt'])
+        && data.uid is string
+        && data.email is string
+        && data.profileCompleted is bool;
+    }
+
+    // Returns the deterministic friendship document ID.
+    // Mirrors the Dart getFriendshipId() helper exactly.
+    function friendshipDocId(uidA, uidB) {
+      return uidA < uidB ? uidA + '_' + uidB : uidB + '_' + uidA;
+    }
+
+    // Checks whether a friendship document exists between two users.
+    function areFriends(uidA, uidB) {
+      return exists(
+        /databases/$(database)/documents/friendships/$(friendshipDocId(uidA, uidB))
+      );
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // USERS COLLECTION  →  users/{uid}
+    // ─────────────────────────────────────────────────────────────────────────
+
+    match /users/{uid} {
+
+      // Any signed-in user can read any profile (needed for chat, mentions, discover, etc.)
+      allow read: if isSignedIn();
+
+      // Only the owner can create their own document
+      allow create: if isSignedIn()
+        && isOwner(uid)
+        && hasRequiredUserFields()
+        && request.resource.data.uid == uid;
+
+      // Only the owner can update their own document.
+      // Prevent changing uid, email, createdAt after creation.
+      allow update: if isSignedIn()
+        && isOwner(uid)
+        && request.resource.data.uid == resource.data.uid
+        && request.resource.data.email == resource.data.email
+        && request.resource.data.createdAt == resource.data.createdAt;
+
+      // Nobody can delete user documents from the client
+      allow delete: if false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // USERNAMES COLLECTION  →  usernames/{usernameLower}
+    // Used for global uniqueness enforcement
+    // ─────────────────────────────────────────────────────────────────────────
+
+    match /usernames/{usernameLower} {
+
+      // Any signed-in user can read (needed for availability checks)
+      allow read: if isSignedIn();
+
+      // Only allow create — never update or delete.
+      // The document uid must match the requesting user.
+      // The document key must be a valid lowercase username.
+      allow create: if isSignedIn()
+        && request.resource.data.uid == request.auth.uid
+        && isValidUsername(usernameLower);
+
+      // Usernames cannot be released or transferred from the client
+      allow update: if false;
+      allow delete: if false;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // FRIEND REQUESTS  →  friend_requests/{requestId}
+    // ─────────────────────────────────────────────────────────────────────────
+
+    match /friend_requests/{requestId} {
+
+      // Either the sender or the recipient may read their own requests
+      allow read: if isSignedIn()
+        && (resource.data.fromUid == request.auth.uid
+         || resource.data.toUid   == request.auth.uid);
+
+      // Only the sender may create a request.
+      // Guards: must be addressed to someone else, status must start as pending.
+      allow create: if isSignedIn()
+        && request.resource.data.fromUid == request.auth.uid
+        && request.resource.data.toUid   != request.auth.uid
+        && request.resource.data.status  == 'pending';
+
+      // Only the recipient may update (accept or reject) a pending request.
+      // Prevents field tampering: fromUid/toUid are immutable after creation.
+      allow update: if isSignedIn()
+        && resource.data.toUid   == request.auth.uid
+        && resource.data.status  == 'pending'
+        && request.resource.data.status in ['accepted', 'rejected']
+        && request.resource.data.fromUid == resource.data.fromUid
+        && request.resource.data.toUid   == resource.data.toUid;
+
+      // Only the sender may delete (withdraw) a pending request.
+      // Accepted/rejected requests cannot be deleted from the client.
+      allow delete: if isSignedIn()
+        && resource.data.fromUid == request.auth.uid
+        && resource.data.status  == 'pending';
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // FRIENDSHIPS  →  friendships/{friendshipId}
+    // friendshipId is always min(uid1,uid2) + "_" + max(uid1,uid2)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    match /friendships/{friendshipId} {
+
+      // Either party may read their friendship document
+      allow read: if isSignedIn()
+        && (resource.data.user1 == request.auth.uid
+         || resource.data.user2 == request.auth.uid);
+
+      // Created as part of the acceptFriendRequest transaction.
+      // The requesting user must be one of the two parties in the document.
+      allow create: if isSignedIn()
+        && (request.resource.data.user1 == request.auth.uid
+         || request.resource.data.user2 == request.auth.uid);
+
+      // Friendships are immutable — no field changes allowed
+      allow update: if false;
+
+      // Either party may remove (unfriend) by deleting the document
+      allow delete: if isSignedIn()
+        && (resource.data.user1 == request.auth.uid
+         || resource.data.user2 == request.auth.uid);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // FALLBACK — deny everything not explicitly matched above
+    // ─────────────────────────────────────────────────────────────────────────
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
