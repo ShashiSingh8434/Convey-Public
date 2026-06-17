@@ -7,12 +7,6 @@ Convey combines messaging, media sharing, push notifications, presence tracking,
 Designed with a feature-first architecture and powered by Riverpod, Firestore, Realtime Database, Cloudinary, Firebase Cloud Messaging, and WebRTC, Convey delivers a fast, responsive, and production-ready communication experience.
 
 ---
-# Convey Web
-
-### _**Web version only supports chat (no media upload, no voice upload, no notification)**_
-### [Link to Convey Web](https://shashisingh8434.github.io/Convey/)
-
----
 
 # Screenshots
 
