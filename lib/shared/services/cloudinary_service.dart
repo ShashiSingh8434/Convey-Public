@@ -19,14 +19,14 @@ class CloudinaryService {
   static final instance = CloudinaryService._();
 
   // ── ⚙️  Configure these two values ────────────────────────────────────────
-  static const String _cloudName = 'shashisingh-cloud';
-  static const String _uploadPreset = 'convey';
-  static const String _uploadPresetChat = 'convey_chats';
+  static const String _cloudName = '*****';
+  static const String _uploadPreset = '*****';
+  static const String _uploadPresetChat = '*****';
   // ──────────────────────────────────────────────────────────────────────────
 
   // ── Profile photo (unchanged) ─────────────────────────────────────────────
 
-  static const String _profileFolder = 'convey_profiles';
+  static const String _profileFolder = '*****';
   // static const String _chatFolder = 'convey_chat';
 
   Uri get _imageUploadUri =>
